@@ -10,3 +10,7 @@ export interface Campaign {
   town: string;
   radius: number; // w km
 }
+
+export type CampaignFormData = Omit<Campaign, 'id'>;
+
+export const CITIES = ["Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław"];

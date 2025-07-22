@@ -3,17 +3,14 @@ import CampaignListItem from './CampaignListItem';
 
 interface CampaignListProps {
   campaigns: Campaign[];
+  onEdit: (campaign: Campaign) => void;
 }
 
-const CampaignList = ({ campaigns }: CampaignListProps) => {
-  if (campaigns.length === 0) {
-    return <div className="empty-message">Brak dostępnych kampanii.</div>;
-  }
-
+function CampaignList({ campaigns, onEdit }: CampaignListProps) {
   return (
     <div className="campaign-list">
       {campaigns.map((campaign) => (
-        <CampaignListItem key={campaign.id} campaign={campaign} />
+        <CampaignListItem key={campaign.id} campaign={campaign} onEdit={onEdit} />
       ))}
     </div>
   );
