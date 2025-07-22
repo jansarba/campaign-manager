@@ -31,6 +31,12 @@ function App() {
   const handleCancelEdit = () => {
     setCampaignToEdit(null);
   };
+  
+  const deleteCampaign = (id: number) => {
+    if (window.confirm('Na pewno usunac te kampanie?')) {
+      setCampaigns(campaigns.filter(c => c.id !== id));
+    }
+  };
 
   return (
     <main>
@@ -41,7 +47,11 @@ function App() {
       />
       <section className="campaign-list-section">
         <h1>Zarządzanie Kampaniami</h1>
-        <CampaignList campaigns={campaigns} onEdit={handleSelectCampaignToEdit} />
+        <CampaignList 
+          campaigns={campaigns} 
+          onEdit={handleSelectCampaignToEdit}
+          onDelete={deleteCampaign}
+        />
       </section>
     </main>
   );

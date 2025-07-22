@@ -3,9 +3,10 @@ import { Campaign } from '../types';
 interface CampaignListItemProps {
   campaign: Campaign;
   onEdit: (campaign: Campaign) => void;
+  onDelete: (id: number) => void;
 }
 
-const CampaignListItem = ({ campaign, onEdit }: CampaignListItemProps) => {
+function CampaignListItem({ campaign, onEdit, onDelete }: CampaignListItemProps) {
   const statusClass = campaign.status === 'on' ? 'status-on' : 'status-off';
 
   return (
@@ -23,7 +24,7 @@ const CampaignListItem = ({ campaign, onEdit }: CampaignListItemProps) => {
       </div>
       <div className="campaign-actions">
         <button className="btn-edit" onClick={() => onEdit(campaign)}>Edytuj</button>
-        <button className="btn-delete">Usuń</button>
+        <button className="btn-delete" onClick={() => onDelete(campaign.id)}>Usuń</button>
       </div>
     </div>
   );

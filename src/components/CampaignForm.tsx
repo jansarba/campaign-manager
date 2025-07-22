@@ -41,7 +41,7 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'bidAmount' || name === 'campaignFund' || name === 'radius' ? parseFloat(value) : value }));
+    setFormData(prev => ({ ...prev, [name]: name === 'bidAmount' || name === 'campaignFund' || name === 'radius' ? parseFloat(value) || 0 : value }));
   };
 
   const handleKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,10 +52,26 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!formData.name || formData.keywords.length === 0) {
-      alert('Nazwa kampanii i slowa kluczowe sa wymagane!');
+
+    const errors = [];
+    if (!formData.name.trim()) {
+      errors.push("Nazwa kampanii jest wymagana.");
+    }
+    if (formData.keywords.length === 0) {
+      errors.push("Podaj przynajmniej jedno slowo kluczowe.");
+    }
+    if (formData.bidAmount < 10) {
+      errors.push("Minimalna stawka to 10 zl.");
+    }
+    if (formData.campaignFund <= 0) {
+      errors.push("Fundusz kampanii musi byc wiekszy niz 0.");
+    }
+
+    if (errors.length > 0) {
+      alert(errors.join('\n'));
       return;
     }
+    
     onSave(formData);
     setFormData(initialFormData);
     setKeywordsInput('');
@@ -67,29 +83,29 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
 
       <div className="form-group">
         <label htmlFor="name">Nazwa Kampanii</label>
-        <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
+        <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} />
       </div>
 
       <div className="form-group">
         <label htmlFor="keywords">Słowa Kluczowe (oddzielone przecinkiem)</label>
-        <input type="text" id="keywords" name="keywords" value={keywordsInput} onChange={handleKeywordsChange} required />
+        <input type="text" id="keywords" name="keywords" value={keywordsInput} onChange={handleKeywordsChange} />
       </div>
 
       <div className="form-group">
         <label htmlFor="bidAmount">Stawka (min. 10)</label>
-        <input type="number" id="bidAmount" name="bidAmount" value={formData.bidAmount} onChange={handleChange} min="10" required />
+        <input type="number" id="bidAmount" name="bidAmount" value={formData.bidAmount} onChange={handleChange} min="10" />
       </div>
 
       <div className="form-group">
         <label htmlFor="campaignFund">Fundusz Kampanii</label>
-        <input type="number" id="campaignFund" name="campaignFund" value={formData.campaignFund} onChange={handleChange} min="1" required />
+        <input type="number" id="campaignFund" name="campaignFund" value={formData.campaignFund} onChange={handleChange} min="1" />
       </div>
 
       <div className="form-group">
         <label>Status</label>
         <div className="radio-group">
-          <label><input type="radio" name="status" value="On" checked={formData.status === 'on'} onChange={handleChange} /> Włączona</label>
-          <label><input type="radio" name="status" value="Off" checked={formData.status === 'off'} onChange={handleChange} /> Wyłączona</label>
+          <label><input type="radio" name="status" value="on" checked={formData.status === 'on'} onChange={handleChange} /> Włączona</label>
+          <label><input type="radio" name="status" value="off" checked={formData.status === 'off'} onChange={handleChange} /> Wyłączona</label>
         </div>
       </div>
 
@@ -101,8 +117,8 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
       </div>
 
       <div className="form-group">
-        <label htmlFor="radius">Promien (km)</label>
-        <input type="number" id="radius" name="radius" value={formData.radius} onChange={handleChange} min="1" required />
+        <label htmlFor="radius">Promień (km)</label>
+        <input type="number" id="radius" name="radius" value={formData.radius} onChange={handleChange} min="1" />
       </div>
 
       <div className="form-actions">
@@ -111,6 +127,6 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
       </div>
     </form>
   );
-}
+};
 
 export default CampaignForm;
