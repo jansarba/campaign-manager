@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { mockCampaigns } from './data/mockCampaigns';
 import CampaignList from './components/CampaignList';
 import CampaignForm from './components/CampaignForm';
@@ -8,6 +8,14 @@ import './App.css';
 function App() {
   const [campaigns, setCampaigns] = useState(mockCampaigns);
   const [campaignToEdit, setCampaignToEdit] = useState<Campaign | null>(null);
+
+  const allKeywords = useMemo(() => {
+    const keywordSet = new Set<string>();
+    campaigns.forEach(campaign => {
+      campaign.keywords.forEach(kw => keywordSet.add(kw));
+    });
+    return Array.from(keywordSet);
+  }, [campaigns]);
 
   const handleSaveCampaign = (formData: CampaignFormData) => {
     if (campaignToEdit) {
@@ -44,6 +52,7 @@ function App() {
         onSave={handleSaveCampaign}
         currentCampaign={campaignToEdit}
         onCancel={handleCancelEdit}
+        allKeywords={allKeywords}
       />
       <section className="campaign-list-section">
         <h1>Zarządzanie Kampaniami</h1>

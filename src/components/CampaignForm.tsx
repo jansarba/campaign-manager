@@ -5,6 +5,7 @@ interface CampaignFormProps {
   onSave: (campaignData: CampaignFormData) => void;
   currentCampaign: Campaign | null;
   onCancel: () => void;
+  allKeywords: string[];
 }
 
 const initialFormData: CampaignFormData = {
@@ -17,26 +18,19 @@ const initialFormData: CampaignFormData = {
   radius: 10,
 };
 
-function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) {
+function CampaignForm({ onSave, currentCampaign, onCancel, allKeywords }: CampaignFormProps) {
   const [formData, setFormData] = useState(initialFormData);
-  const [keywordsInput, setKeywordsInput] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     if (currentCampaign) {
-      setFormData({
-        name: currentCampaign.name,
-        keywords: currentCampaign.keywords,
-        bidAmount: currentCampaign.bidAmount,
-        campaignFund: currentCampaign.campaignFund,
-        status: currentCampaign.status,
-        town: currentCampaign.town,
-        radius: currentCampaign.radius,
-      });
-      setKeywordsInput(currentCampaign.keywords.join(', '));
+      setFormData(currentCampaign);
     } else {
       setFormData(initialFormData);
-      setKeywordsInput('');
     }
+    setKeywordInput('');
+    setSuggestions([]);
   }, [currentCampaign]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -44,29 +38,50 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
     setFormData(prev => ({ ...prev, [name]: name === 'bidAmount' || name === 'campaignFund' || name === 'radius' ? parseFloat(value) || 0 : value }));
   };
 
-  const handleKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setKeywordsInput(e.target.value);
-    const keywordsArray = e.target.value.split(',').map(kw => kw.trim()).filter(Boolean);
-    setFormData(prev => ({ ...prev, keywords: keywordsArray }));
+  const handleKeywordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setKeywordInput(value);
+    if (value) {
+      const filteredSuggestions = allKeywords
+        .filter(kw => kw.toLowerCase().startsWith(value.toLowerCase()))
+        .filter(kw => !formData.keywords.includes(kw))
+        .slice(0, 5);
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  };
+  
+  const addKeyword = (keyword: string) => {
+    const trimmedKeyword = keyword.trim();
+    if (trimmedKeyword && !formData.keywords.includes(trimmedKeyword)) {
+      setFormData(prev => ({ ...prev, keywords: [...prev.keywords, trimmedKeyword] }));
+    }
+    setKeywordInput('');
+    setSuggestions([]);
+  };
+
+  const removeKeyword = (keywordToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      keywords: prev.keywords.filter(kw => kw !== keywordToRemove),
+    }));
+  };
+
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addKeyword(keywordInput);
+    }
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-
     const errors = [];
-    if (!formData.name.trim()) {
-      errors.push("Nazwa kampanii jest wymagana.");
-    }
-    if (formData.keywords.length === 0) {
-      errors.push("Podaj przynajmniej jedno slowo kluczowe.");
-    }
-    if (formData.bidAmount < 10) {
-      errors.push("Minimalna stawka to 10 zl.");
-    }
-    if (formData.campaignFund <= 0) {
-      errors.push("Fundusz kampanii musi byc wiekszy niz 0.");
-    }
-
+    if (!formData.name.trim()) errors.push("Nazwa kampanii jest wymagana.");
+    if (formData.keywords.length === 0) errors.push("Podaj przynajmniej jedno slowo kluczowe.");
+    if (formData.bidAmount < 10) errors.push("Minimalna stawka to 10 zl.");
+    if (formData.campaignFund <= 0) errors.push("Fundusz kampanii musi byc wiekszy niz 0.");
     if (errors.length > 0) {
       alert(errors.join('\n'));
       return;
@@ -74,7 +89,6 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
     
     onSave(formData);
     setFormData(initialFormData);
-    setKeywordsInput('');
   };
 
   return (
@@ -86,9 +100,33 @@ function CampaignForm({ onSave, currentCampaign, onCancel }: CampaignFormProps) 
         <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="keywords">Słowa Kluczowe (oddzielone przecinkiem)</label>
-        <input type="text" id="keywords" name="keywords" value={keywordsInput} onChange={handleKeywordsChange} />
+      <div className="form-group keywords-container">
+        <label htmlFor="keywords">Słowa Kluczowe</label>
+        <div className="keywords-pills">
+          {formData.keywords.map(kw => (
+            <span key={kw} className="keyword-pill">
+              {kw}
+              <button type="button" onClick={() => removeKeyword(kw)}>×</button>
+            </span>
+          ))}
+        </div>
+        <input
+          type="text"
+          id="keywords"
+          value={keywordInput}
+          onChange={handleKeywordInputChange}
+          onKeyDown={handleKeywordKeyDown}
+          placeholder="Dodaj słowo i naciśnij Enter"
+        />
+        {suggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {suggestions.map(sugg => (
+              <li key={sugg} onClick={() => addKeyword(sugg)}>
+                {sugg}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="form-group">
